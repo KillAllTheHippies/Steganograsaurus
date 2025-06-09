@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QTextEdit, QFileDialog, QComboBox, QMessageBox
+    QPushButton, QTextEdit, QFileDialog, QComboBox, QMessageBox, QDockWidget
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -60,33 +60,122 @@ class MainWindow(QMainWindow):
         # Create main widgets
         self.init_ui()
         
-    def init_ui(self):
-        """Initialize the user interface"""
-        main_widget = QWidget()
-        main_layout = QVBoxLayout()
-        
-        # Image selection
-        self.image_label = QLabel("No image selected")
-        self.image_label.setAlignment(Qt.AlignCenter)
-        
-        self.image_preview = ImagePreviewWidget(self)
-        self.image_preview.setAlignment(Qt.AlignCenter)
-        self.image_preview.setStyleSheet("""
+        # Apply custom QSS stylesheet
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #2E2E2E; /* Dark gray background */
+            }
+
+            QDockWidget {
+                background-color: #3C3C3C; /* Slightly lighter gray for dock widgets */
+                color: #FFFFFF; /* White text */
+            }
+
+            QDockWidget::title {
+                background-color: #555555; /* Darker gray for title bar */
+                padding: 5px;
+                border: 1px solid #2E2E2E;
+            }
+
             QLabel {
-                border: 2px dashed #ccc;
+                color: #E0E0E0; /* Light gray text for labels */
+                font-size: 14px;
+            }
+
+            QPushButton {
+                background-color: #5E5E5E; /* Medium gray for buttons */
+                color: #FFFFFF;
+                border: 1px solid #777777;
+                padding: 8px 16px;
+                font-size: 14px;
+                border-radius: 4px;
+            }
+
+            QPushButton:hover {
+                background-color: #6E6E6E; /* Lighter gray on hover */
+            }
+
+            QPushButton:pressed {
+                background-color: #4E4E4E; /* Darker gray when pressed */
+            }
+
+            QComboBox {
+                background-color: #4E4E4E;
+                color: #FFFFFF;
+                border: 1px solid #777777;
+                padding: 5px;
+                font-size: 14px;
+                border-radius: 4px;
+                selection-background-color: #6E6E6E;
+            }
+
+            QComboBox::drop-down {
+                border: none;
+            }
+
+            QComboBox QAbstractItemView { /* Styling for the dropdown list items */
+                background-color: #4E4E4E;
+                color: #FFFFFF;
+                selection-background-color: #6E6E6E;
+                border: 1px solid #777777;
+            }
+
+            QTextEdit {
+                background-color: #3C3C3C;
+                color: #E0E0E0;
+                border: 1px solid #555555;
+                padding: 5px;
+                font-size: 14px;
+                border-radius: 4px;
+            }
+
+            QStatusBar {
+                color: #E0E0E0;
+            }
+
+            QStatusBar::item {
+                border: none; /* Remove borders between status bar items */
+            }
+
+            /* Styling for the ImagePreviewWidget specifically */
+            ImagePreviewWidget {
+                border: 2px dashed #555555; /* Darker dashed border for preview */
                 min-height: 200px;
             }
-            QLabel[dragging="true"] {
-                border: 2px dashed #666;
-                background-color: #f0f0f0;
+
+            ImagePreviewWidget[dragging="true"] {
+                border: 2px dashed #007ACC; /* Blue border when dragging */
+                background-color: #3A3A3A;
             }
         """)
         
+    def init_ui(self):
+        """Initialize the user interface"""
+
+        # Image selection label and button (will remain in central widget for now)
+        self.image_label = QLabel("No image selected")
+        self.image_label.setAlignment(Qt.AlignCenter)
+
         select_image_btn = QPushButton("Select Image")
         select_image_btn.clicked.connect(self.select_image)
-        
-        # Encoding options
-        options_layout = QHBoxLayout()
+
+        # Image Preview Dock
+        self.image_preview = ImagePreviewWidget(self)
+        self.image_preview.setAlignment(Qt.AlignCenter)
+        # The setStyleSheet call for image_preview is removed, will be handled by global QSS
+        image_preview_dock = QDockWidget("Image Preview", self)
+        image_preview_dock.setWidget(self.image_preview)
+        self.addDockWidget(Qt.TopDockWidgetArea, image_preview_dock)
+
+        # Text Input Dock
+        self.text_input = QTextEdit()
+        self.text_input.setPlaceholderText("Enter message to encode...")
+        self.text_input.setAcceptDrops(False)
+        text_input_dock = QDockWidget("Message", self)
+        text_input_dock.setWidget(self.text_input)
+        self.addDockWidget(Qt.BottomDockWidgetArea, text_input_dock)
+
+        # Encoding Options Dock
         self.method_combo = QComboBox()
         self.method_combo.addItems([
             "LSB Encoding",
@@ -95,12 +184,16 @@ class MainWindow(QMainWindow):
             "Combined Encoding"
         ])
         
-        # Text input
-        self.text_input = QTextEdit()
-        self.text_input.setPlaceholderText("Enter message to encode...")
-        self.text_input.setAcceptDrops(False)
+        options_container_widget = QWidget()
+        options_layout = QHBoxLayout(options_container_widget)
+        options_layout.addWidget(QLabel("Encoding Method:"))
+        options_layout.addWidget(self.method_combo)
         
-        # Buttons
+        encoding_options_dock = QDockWidget("Encoding Options", self)
+        encoding_options_dock.setWidget(options_container_widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, encoding_options_dock)
+
+        # Buttons (will remain in central widget for now)
         encode_btn = QPushButton("Encode")
         encode_btn.clicked.connect(self.encode_message)
         
@@ -110,20 +203,37 @@ class MainWindow(QMainWindow):
         # Status bar
         self.status_bar = self.statusBar()
         
-        # Add widgets to layout
+        # Central Widget setup
+        main_widget = QWidget()
+        main_layout = QVBoxLayout(main_widget)
         main_layout.addWidget(self.image_label)
-        main_layout.addWidget(self.image_preview)
         main_layout.addWidget(select_image_btn)
-        main_layout.addLayout(options_layout)
-        options_layout.addWidget(QLabel("Encoding Method:"))
-        options_layout.addWidget(self.method_combo)
-        main_layout.addWidget(self.text_input)
         main_layout.addWidget(encode_btn)
         main_layout.addWidget(decode_btn)
         
-        main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
+
+        # Connect signals for dynamic updates
+        self.method_combo.currentIndexChanged.connect(self.update_status_bar_capacity)
         
+    def update_status_bar_capacity(self):
+        """Updates the status bar with the max message capacity for the current image and method."""
+        if hasattr(self.encoder, 'image_path') and self.encoder.image_path and self.encoder.image:
+            try:
+                method = self.method_combo.currentText().lower().split()[0]
+                capacity = calculate_max_capacity(self.encoder.image_path, method)
+                self.status_bar.showMessage(f"Max message capacity: {capacity} characters")
+            except Exception as e:
+                # Handle cases where capacity calculation might fail or image not fully loaded
+                self.status_bar.showMessage(f"Could not calculate capacity: {e}")
+        elif hasattr(self.encoder, 'image') and self.encoder.image:
+            # If image is loaded but no path (e.g. if image was passed as object, not path)
+            # This case might need more robust handling in calculate_max_capacity if it only takes path
+            self.status_bar.showMessage("Capacity unknown (image loaded without path).")
+        else:
+            self.status_bar.showMessage("No image loaded or method selected.")
+
+
     def select_image(self, file_path=None):
         """Handle image selection"""
         if not file_path:
@@ -148,9 +258,8 @@ class MainWindow(QMainWindow):
             self.image_preview.setPixmap(QPixmap.fromImage(qimage))
             
             # Update status
-            method = self.method_combo.currentText().lower().split()[0]
-            capacity = calculate_max_capacity(file_path, method)
-            self.status_bar.showMessage(f"Max message capacity: {capacity} characters")
+            self.encoder.image_path = file_path # Store image path in encoder instance
+            self.update_status_bar_capacity()
             
     def encode_message(self):
         """Handle message encoding"""
