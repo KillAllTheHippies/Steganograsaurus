@@ -18,6 +18,10 @@ Compatible Image Types:
 - TIFF
 - WEBP (RGB/RGBA only)
 
+### User Interface
+- **Modern Look and Feel:** The application sports a clean, dark theme for improved aesthetics.
+- **Customizable Layout:** Features dockable widgets for the image preview, message input area, and encoding options, allowing you to arrange the workspace to your preference.
+
 ## Requirements
 - Python 3.8+
 - PyQt5
@@ -31,6 +35,12 @@ Compatible Image Types:
    pip install -r requirements.txt
    pip install -e .  # Install in editable mode
    ```
+
+## Quick Start (Ubuntu with Script)
+
+For a fast setup on Ubuntu, a helper script is available. This script automates cloning/updating the repository, installing dependencies, and launching the application.
+
+For detailed instructions on using this script, please see the `image_steganography/README.md` file.
 
 ## Usage
 Run the application:
