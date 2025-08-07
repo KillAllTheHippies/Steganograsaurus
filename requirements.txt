@@ -1,0 +1,12 @@
+# Production dependencies for Image Steganography v2
+
+# Image processing
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# GUI framework (optional, uncomment if using tkinter alternatives)
+# PyQt5>=5.15.0
+# PySide6>=6.0.0
+
+# Additional utilities
+pyyaml>=6.0
